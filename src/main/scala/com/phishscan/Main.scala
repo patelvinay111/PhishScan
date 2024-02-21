@@ -1,7 +1,9 @@
 package com.phishscan
 
-object Main {
+import com.typesafe.scalalogging.LazyLogging
+
+object Main extends LazyLogging{
   def main(args: Array[String]): Unit = {
-    println("Hello, World!")
+    logger.info("Hello!")
   }
 }
