@@ -1,3 +1,5 @@
+import scala.collection.immutable.Seq
+
 organization := "com.phishscan"
 
 version := "0.1.0-SNAPSHOT"
@@ -17,4 +19,13 @@ libraryDependencies += "ch.qos.logback"              % "logback-classic" % "1.4.
 libraryDependencies += "com.squareup.okhttp3" % "okhttp"  % "4.10.0"
 libraryDependencies += "info.picocli"         % "picocli" % "4.7.3"
 
+libraryDependencies += "io.monix"                %% "monix-kafka-1x"          % "1.0.0-RC7" exclude ("org.slf4j", "log4j-over-slf4j")
+libraryDependencies += "info.picocli"             % "picocli"                 % "4.7.3"
 
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-core",
+  "io.circe" %% "circe-generic",
+  "io.circe" %% "circe-parser"
+).map(_ % "0.14.3")
+
+dependencyOverrides += "org.apache.kafka" % "kafka-clients" % "3.3.1"
