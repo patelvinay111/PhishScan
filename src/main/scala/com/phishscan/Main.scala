@@ -57,6 +57,13 @@ object Main extends LazyLogging{
     )
     private var kafkaSecurityProtocol: SecurityProtocol = _
 
+    @Option(
+      names = Array("--gemini-token"),
+      required = true,
+      description = Array("""Google Gemini Api Token""")
+    )
+    private var geminiToken: String = _
+
     private def readAndProcess(email: Email): ValidatedEmailResponse = {
       val emailContent = email.content
       val client = new OkHttpClient.Builder().build()
@@ -102,7 +109,7 @@ object Main extends LazyLogging{
           |}""".stripMargin)
 
       val request = new Request.Builder()
-        .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=AIzaSyAv2BDoSXQClkmArzJe-uNBxCJXohxBmds")
+        .url(s"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=$geminiToken")
         .method("POST", body)
         .addHeader("Content-Type", "application/json")
         .build()
