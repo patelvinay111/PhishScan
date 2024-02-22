@@ -126,7 +126,7 @@ object Main extends LazyLogging{
             .downField("parts").downArray
             .downField("text").as[String]) match {
         case Right(value) => value.toBoolean
-        case Left(error)  => true // Assume Phishing if ran into error
+        case Left(_)  => true // Assume Phishing if ran into error
       }
 
       // Close the response to release resources
