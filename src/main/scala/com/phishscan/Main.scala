@@ -1,8 +1,8 @@
 package com.phishscan
 
 import com.phishscan.cli.{AutoOffsetResetConverter, SecurityProtocolConverter}
-import com.phishscan.kafka.Observables
-import com.phishscan.schema.{Email, ValidatedEmailRequest}
+import com.phishscan.kafka.{Observables, StreamingProgram}
+import com.phishscan.schema.{Email, ValidatedEmailResponse}
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.kafka.config.{AutoOffsetReset, SecurityProtocol}
@@ -57,21 +57,7 @@ object Main extends LazyLogging{
     )
     private var kafkaSecurityProtocol: SecurityProtocol = _
 
-    private def readAndProcess(emailText: Email): ValidatedEmailRequest = {
-      ValidatedEmailRequest(true) //Placeholder
-    }
-
-    override def run(): Unit = {
-      logger.info("Waiting to receive messages to process")
-      implicit val scheduler: Scheduler = monix.execution.Scheduler.global
-
-      logger.debug("Environment variables set as follows:")
-      logger.debug(s"Kafka Server: $kafkaServer")
-      logger.debug(s"Kafka Security Protocol: $kafkaSecurityProtocol")
-      logger.debug(s"Kafka Topic in: $kafkaTopicIn")
-      logger.debug(s"Kafka Group ID: $kafkaGroupId")
-      logger.debug(s"Auto Offset Reset: $autoOffsetReset")
-
+    private def readAndProcess(emailText: Email): ValidatedEmailResponse = {
       val client = new OkHttpClient.Builder().build()
 
       val mediaType = MediaType.parse("application/json")
@@ -127,6 +113,30 @@ object Main extends LazyLogging{
 
       // Close the response to release resources
       response.close()
+
+      ValidatedEmailResponse(true) //Placeholder
+    }
+
+    override def run(): Unit = {
+      logger.info("Waiting to receive messages to process")
+      implicit val scheduler: Scheduler = monix.execution.Scheduler.global
+
+      logger.debug("Environment variables set as follows:")
+      logger.debug(s"Kafka Server: $kafkaServer")
+      logger.debug(s"Kafka Security Protocol: $kafkaSecurityProtocol")
+      logger.debug(s"Kafka Topic in: $kafkaTopicIn")
+      logger.debug(s"Kafka Group ID: $kafkaGroupId")
+      logger.debug(s"Auto Offset Reset: $autoOffsetReset")
+
+      Await.result(
+        StreamingProgram
+          .build(
+            observable = Observables.kafkaBacked(kafkaServer, kafkaGroupId, kafkaTopicIn, autoOffsetReset, kafkaSecurityProtocol),
+            processEmail = readAndProcess
+          )
+          .runToFuture,
+        Duration.Inf
+      )
     }
   }
 
