@@ -13,7 +13,7 @@ object StreamingProgram extends LazyLogging {
   def build(
              observable: Observable[String],
              processEmail: Email => ValidatedEmailResponse
-           )(implicit scheduler: Scheduler): Task[Seq[Unit]] = {
+           )(implicit scheduler: Scheduler): Task[Unit] = {
     logger.debug("StreamingProgram Build initiated")
 
     val processed: Observable[Seq[ValidatedEmailResponse]] = observable
@@ -21,7 +21,7 @@ object StreamingProgram extends LazyLogging {
       .map(processEmail)
       .bufferTimedAndCounted(maxCount = 10, timespan = 5.seconds)
 
-    Task.parSequence(Seq(processed))
+    Task(processed)
   }
 
 }
