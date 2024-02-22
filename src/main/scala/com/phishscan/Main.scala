@@ -57,18 +57,19 @@ object Main extends LazyLogging{
     )
     private var kafkaSecurityProtocol: SecurityProtocol = _
 
-    private def readAndProcess(emailText: Email): ValidatedEmailResponse = {
+    private def readAndProcess(email: Email): ValidatedEmailResponse = {
+      val emailContent = email.content
       val client = new OkHttpClient.Builder().build()
 
       val mediaType = MediaType.parse("application/json")
       val body = RequestBody.create(mediaType,
-        """
+        s"""
           |{
           | "contents": [
           |  {
           |   "parts": [
           |    {
-          |     "text": "Is the following sentence positive sentiment or negative\n\nPasta was cold"
+          |     "text": "Consider the following email content and and true if this is likely a phishing email, false otherwise\n$emailContent"
           |    }
           |   ]
           |  }
