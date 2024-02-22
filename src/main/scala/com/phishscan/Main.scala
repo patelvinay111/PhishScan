@@ -4,6 +4,7 @@ import com.phishscan.cli.{AutoOffsetResetConverter, SecurityProtocolConverter}
 import com.phishscan.kafka.{Observables, StreamingProgram}
 import com.phishscan.schema.{Email, ValidatedEmailResponse}
 import com.typesafe.scalalogging.LazyLogging
+import io.circe.parser
 import monix.execution.Scheduler
 import monix.kafka.config.{AutoOffsetReset, SecurityProtocol}
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody, Response}
@@ -117,12 +118,21 @@ object Main extends LazyLogging{
       val response: Response = client.newCall(request).execute()
 
       // Handle the response as needed
-      println(response.body().string())
+      val isPhishing: Boolean = parser
+        .parse(response.body().string())
+        .flatMap(
+          _.hcursor.downField("candidates").downArray
+            .downField("content")
+            .downField("parts").downArray
+            .downField("text").as[String]) match {
+        case Right(value) => value.toBoolean
+        case Left(error)  => true // Assume Phishing if ran into error
+      }
 
       // Close the response to release resources
       response.close()
 
-      ValidatedEmailResponse(true) //Placeholder
+      ValidatedEmailResponse(isPhishing)
     }
 
     override def run(): Unit = {
